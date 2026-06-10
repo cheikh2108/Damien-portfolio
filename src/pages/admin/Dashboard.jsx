@@ -28,7 +28,7 @@ export default function AdminDashboard() {
 
   const QUICK_ACTIONS = [
     { label: 'Nouveau projet', href: '/admin/projects', icon: 'solar:add-square-linear', desc: 'Ajouter un projet au portfolio' },
-    { label: 'Modifier le carousel', href: '/admin/carousel', icon: 'solar:slider-minimalistic-linear', desc: 'Images de la page accueil' },
+    { label: 'Modifier le carousel', href: '/admin/carousel', icon: 'solar:slider-horizontal-linear', desc: 'Images de la page accueil' },
     { label: 'Modifier les services', href: '/admin/services', icon: 'solar:tag-linear', desc: 'Offres et tarifs' },
     { label: 'Modifier le profil', href: '/admin/profile', icon: 'solar:user-linear', desc: 'Bio, outils, réseaux sociaux' },
     { label: 'Galerie', href: '/admin/gallery', icon: 'solar:gallery-linear', desc: 'Gérer les visuels de la galerie' },
@@ -75,8 +75,8 @@ export default function AdminDashboard() {
                 to={action.href}
                 className="flex items-center gap-4 p-4 rounded-2xl ring-1 ring-neutral-200 hover:bg-neutral-50 hover:ring-neutral-400 transition"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neutral-900 text-white">
-                  <iconify-icon icon={action.icon} width="18" height="18"></iconify-icon>
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neutral-900">
+                  <iconify-icon icon={action.icon} width="18" height="18" style={{ color: 'white' }}></iconify-icon>
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-neutral-900">{action.label}</p>

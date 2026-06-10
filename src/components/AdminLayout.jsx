@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase.js'
 const NAV = [
   { label: 'Dashboard', href: '/admin', icon: 'solar:home-2-linear', exact: true },
   { label: 'Projets', href: '/admin/projects', icon: 'solar:folder-linear' },
-  { label: 'Carousel', href: '/admin/carousel', icon: 'solar:slider-minimalistic-linear' },
+  { label: 'Carousel', href: '/admin/carousel', icon: 'solar:slider-horizontal-linear' },
   { label: 'Services', href: '/admin/services', icon: 'solar:tag-linear' },
   { label: 'Galerie', href: '/admin/gallery', icon: 'solar:gallery-linear' },
   { label: 'Profil', href: '/admin/profile', icon: 'solar:user-linear' },
@@ -49,7 +49,7 @@ export default function AdminLayout({ children }) {
                   : 'text-white/70 hover:bg-white/10 hover:text-white'
               }`}
             >
-              <iconify-icon icon={item.icon} width="18" height="18"></iconify-icon>
+              <iconify-icon icon={item.icon} width="18" height="18" style={{ color: 'inherit' }}></iconify-icon>
               {item.label}
             </Link>
           ))}
