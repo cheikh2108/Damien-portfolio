@@ -45,7 +45,11 @@ export default function Layout({ children }) {
         >
           <div className="flex bg-neutral-900 rounded-3xl pt-4 pr-8 pb-4 pl-8 items-center justify-between">
             <div className="flex items-center gap-3">
-              <Link to="/" className="text-lg font-semibold text-white tracking-tight">Damien</Link>
+              <Link
+                to="/"
+                className="text-lg font-semibold text-white tracking-tight"
+                onClick={() => { if (location.pathname === '/') window.scrollTo({ top: 0, behavior: 'smooth' }) }}
+              >Damien</Link>
             </div>
             <nav className="hidden md:flex items-center gap-6">
               <Link
