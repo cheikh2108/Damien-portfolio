@@ -8,10 +8,18 @@ export default function Layout({ children }) {
 
   useEffect(() => {
     if (location.pathname === '/' && location.hash) {
-      const el = document.querySelector(location.hash)
-      if (el) {
-        setTimeout(() => el.scrollIntoView({ behavior: 'smooth' }), 100)
-      }
+      const hash = location.hash
+      let tries = 0
+      const interval = setInterval(() => {
+        const el = document.querySelector(hash)
+        if (el) {
+          clearInterval(interval)
+          el.scrollIntoView({ behavior: 'smooth' })
+        } else if (++tries > 20) {
+          clearInterval(interval)
+        }
+      }, 150)
+      return () => clearInterval(interval)
     }
   }, [location])
 
