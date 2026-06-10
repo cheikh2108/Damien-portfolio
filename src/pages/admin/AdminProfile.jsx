@@ -4,6 +4,23 @@ import { supabase } from '../../lib/supabase.js'
 
 const LEVELS = ['Maîtrisé', 'Avancé', 'Intermédiaire', 'Notions']
 
+const ALL_NETWORKS = [
+  { id: 'instagram', name: 'Instagram', icon: 'simple-icons:instagram' },
+  { id: 'behance',   name: 'Behance',   icon: 'simple-icons:behance' },
+  { id: 'linkedin',  name: 'LinkedIn',  icon: 'simple-icons:linkedin' },
+  { id: 'tiktok',    name: 'TikTok',    icon: 'simple-icons:tiktok' },
+  { id: 'twitter',   name: 'X / Twitter', icon: 'simple-icons:x' },
+  { id: 'youtube',   name: 'YouTube',   icon: 'simple-icons:youtube' },
+  { id: 'pinterest', name: 'Pinterest', icon: 'simple-icons:pinterest' },
+  { id: 'facebook',  name: 'Facebook',  icon: 'simple-icons:facebook' },
+  { id: 'discord',   name: 'Discord',   icon: 'simple-icons:discord' },
+  { id: 'snapchat',  name: 'Snapchat',  icon: 'simple-icons:snapchat' },
+]
+
+const DEFAULT_SOCIAL_LINKS = ALL_NETWORKS.map(n => ({
+  ...n, url: '', active: ['instagram', 'behance', 'linkedin'].includes(n.id),
+}))
+
 const DEFAULT = {
   name: 'Damien',
   title: 'Community Manager & Graphiste Junior',
@@ -16,7 +33,7 @@ const DEFAULT = {
   tools: [{ name: 'Photoshop', level: 'Maîtrisé' }, { name: 'Illustrator', level: 'Maîtrisé' }, { name: 'Premiere Pro', level: 'Avancé' }, { name: 'Canva / Figma', level: 'Avancé' }],
   specialties: ['Identité visuelle & branding', 'Contenus réseaux sociaux', 'Retouche & montage photo'],
   phone: '', email: 'hello@damien.studio',
-  instagram_url: '#', behance_url: '#', linkedin_url: '#',
+  social_links: DEFAULT_SOCIAL_LINKS,
   testimonial_quote: "Travailler avec Damien, c'est allier créativité, réactivité et un sens aigu du détail visuel.",
   footer_tagline: 'Community Manager & Graphiste Junior',
 }
@@ -31,11 +48,27 @@ export default function AdminProfile() {
     async function load() {
       const { data } = await supabase.from('profile').select('*').eq('id', 1).single()
       if (data) {
+        // Merge saved social_links with ALL_NETWORKS to always show all networks
+        let social_links = DEFAULT_SOCIAL_LINKS
+        if (Array.isArray(data.social_links) && data.social_links.length > 0) {
+          social_links = ALL_NETWORKS.map(n => {
+            const saved = data.social_links.find(s => s.id === n.id)
+            return saved ? { ...n, url: saved.url || '', active: !!saved.active } : { ...n, url: '', active: false }
+          })
+        } else {
+          // Migrate legacy fields
+          social_links = ALL_NETWORKS.map(n => ({
+            ...n,
+            url: data[`${n.id}_url`] || '',
+            active: ['instagram', 'behance', 'linkedin'].includes(n.id),
+          }))
+        }
         setForm({
           ...DEFAULT,
           ...data,
           tools: Array.isArray(data.tools) ? data.tools : DEFAULT.tools,
           specialties: Array.isArray(data.specialties) ? data.specialties : DEFAULT.specialties,
+          social_links,
         })
       }
       setLoading(false)
@@ -54,6 +87,17 @@ export default function AdminProfile() {
   function addTool() { set('tools', [...form.tools, { name: '', level: 'Avancé' }]) }
   function removeTool(i) { set('tools', form.tools.filter((_, idx) => idx !== i)) }
 
+  // Social links
+  function setSocialUrl(id, url) {
+    set('social_links', form.social_links.map(s => s.id === id ? { ...s, url } : s))
+  }
+  function toggleSocial(id) {
+    const link = form.social_links.find(s => s.id === id)
+    const activeCount = form.social_links.filter(s => s.active).length
+    if (!link.active && activeCount >= 4) return
+    set('social_links', form.social_links.map(s => s.id === id ? { ...s, active: !s.active } : s))
+  }
+
   // Specialties
   function setSpecialty(i, val) {
     const s = [...form.specialties]
@@ -70,6 +114,7 @@ export default function AdminProfile() {
       ...form,
       tools: form.tools.filter(t => t.name),
       specialties: form.specialties.filter(s => s),
+      social_links: form.social_links,
     }).eq('id', 1)
     setSaving(false)
     if (!error) {
@@ -212,17 +257,50 @@ export default function AdminProfile() {
 
         {/* Réseaux sociaux */}
         <Section title="Réseaux sociaux" icon="solar:share-linear">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Field label="Instagram URL">
-              <input value={form.instagram_url || ''} onChange={e => set('instagram_url', e.target.value)} className={input} placeholder="https://instagram.com/..." />
-            </Field>
-            <Field label="Behance URL">
-              <input value={form.behance_url || ''} onChange={e => set('behance_url', e.target.value)} className={input} placeholder="https://behance.net/..." />
-            </Field>
-            <Field label="LinkedIn URL">
-              <input value={form.linkedin_url || ''} onChange={e => set('linkedin_url', e.target.value)} className={input} placeholder="https://linkedin.com/in/..." />
-            </Field>
-          </div>
+          {(() => {
+            const activeCount = form.social_links.filter(s => s.active).length
+            return (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-xs text-neutral-500">Activez jusqu'à <strong>4 réseaux</strong> à afficher sur le site.</p>
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${activeCount >= 4 ? 'bg-amber-100 text-amber-700' : 'bg-neutral-100 text-neutral-600'}`}>
+                    {activeCount}/4 actifs
+                  </span>
+                </div>
+                {activeCount >= 4 && (
+                  <div className="mb-4 flex items-center gap-2 rounded-2xl bg-amber-50 ring-1 ring-amber-200 px-4 py-2.5 text-xs text-amber-700">
+                    <iconify-icon icon="solar:info-circle-linear" width="14" height="14" style={{ color: '#b45309' }}></iconify-icon>
+                    Maximum atteint — désactivez un réseau avant d'en activer un autre.
+                  </div>
+                )}
+                <div className="space-y-3">
+                  {form.social_links.map(link => (
+                    <div key={link.id} className={`flex items-center gap-3 rounded-2xl border p-3 transition ${link.active ? 'border-neutral-900 bg-neutral-50' : 'border-neutral-200 bg-white opacity-60'}`}>
+                      <div className="flex items-center gap-2 w-28 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => toggleSocial(link.id)}
+                          className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${link.active ? 'bg-neutral-900' : 'bg-neutral-300'} ${!link.active && activeCount >= 4 ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                          title={!link.active && activeCount >= 4 ? 'Maximum 4 réseaux actifs' : ''}
+                        >
+                          <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${link.active ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                        </button>
+                        <iconify-icon icon={link.icon} width="16" height="16" style={{ color: link.active ? '#171717' : '#a3a3a3' }}></iconify-icon>
+                        <span className="text-xs font-medium text-neutral-700">{link.name}</span>
+                      </div>
+                      <input
+                        value={link.url}
+                        onChange={e => setSocialUrl(link.id, e.target.value)}
+                        placeholder={`https://...`}
+                        className={`${input} flex-1`}
+                        disabled={!link.active}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </>
+            )
+          })()}
         </Section>
 
         {/* Témoignage */}

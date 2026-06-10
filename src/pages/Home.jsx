@@ -189,14 +189,17 @@ export default function Home() {
                 </motion.div>
                 <motion.div variants={scaleIn} className="ring-1 bg-[url(https://hoirqrkdgbmvpwutwuwj.supabase.co/storage/v1/object/public/assets/assets/4ba34171-fc4e-49ee-a2c4-13a87fd225c6_1600w.jpg)] bg-cover rounded-3xl pt-20 pr-5 pb-20 pl-5 shadow-sm ring-neutral-200 bg-white flex-1 min-h-0"></motion.div>
                 <motion.div variants={stagger(0.07)} className="space-y-3">
-                  {[
-                    { label: 'Instagram', icon: 'simple-icons:instagram', href: profile.instagram_url || '#' },
-                    { label: 'Behance', icon: 'simple-icons:behance', href: profile.behance_url || '#' },
-                    { label: 'LinkedIn', icon: 'simple-icons:linkedin', href: profile.linkedin_url || '#' },
-                  ].map((item) => (
-                    <motion.a key={item.label} variants={fadeLeft} href={item.href} className="flex items-center justify-between rounded-2xl px-4 py-3 ring-1 transition bg-white ring-neutral-200 hover:bg-neutral-50">
-                      <span className="text-sm font-medium text-neutral-800">{item.label}</span>
-                      <iconify-icon icon={item.icon} width="20" height="20" className="text-neutral-500"></iconify-icon>
+                  {(Array.isArray(profile.social_links)
+                    ? profile.social_links.filter(s => s.active && s.url && s.url !== '#')
+                    : [
+                        { id: 'instagram', name: 'Instagram', icon: 'simple-icons:instagram', url: profile.instagram_url || '#', active: true },
+                        { id: 'behance',   name: 'Behance',   icon: 'simple-icons:behance',   url: profile.behance_url   || '#', active: true },
+                        { id: 'linkedin',  name: 'LinkedIn',  icon: 'simple-icons:linkedin',  url: profile.linkedin_url  || '#', active: true },
+                      ]
+                  ).map((item) => (
+                    <motion.a key={item.id || item.name} variants={fadeLeft} href={item.url || item.href} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-2xl px-4 py-3 ring-1 transition bg-white ring-neutral-200 hover:bg-neutral-50">
+                      <span className="text-sm font-medium text-neutral-800">{item.name || item.label}</span>
+                      <iconify-icon icon={item.icon} width="20" height="20" style={{ color: '#737373' }}></iconify-icon>
                     </motion.a>
                   ))}
                   <motion.a variants={fadeLeft} href="#contact" className="flex items-center justify-between rounded-2xl px-4 py-3 ring-1 transition bg-neutral-900 ring-neutral-200 hover:bg-black">
@@ -466,9 +469,16 @@ export default function Home() {
                   <li><a href="#contact" className="text-sm text-white hover:text-white/80 font-medium transition">Contact</a></li>
                 </ul>
                 <ul className="space-y-2">
-                  <li><a href={profile.instagram_url || '#'} className="text-sm text-white hover:text-white/80 font-medium transition">Instagram</a></li>
-                  <li><a href={profile.behance_url || '#'} className="text-sm text-white hover:text-white/80 font-medium transition">Behance</a></li>
-                  <li><a href={profile.linkedin_url || '#'} className="text-sm text-white hover:text-white/80 font-medium transition">LinkedIn</a></li>
+                  {(Array.isArray(profile.social_links)
+                    ? profile.social_links.filter(s => s.active && s.url && s.url !== '#')
+                    : [
+                        { id: 'instagram', name: 'Instagram', url: profile.instagram_url },
+                        { id: 'behance',   name: 'Behance',   url: profile.behance_url },
+                        { id: 'linkedin',  name: 'LinkedIn',  url: profile.linkedin_url },
+                      ]
+                  ).map(s => (
+                    <li key={s.id}><a href={s.url} target="_blank" rel="noopener noreferrer" className="text-sm text-white hover:text-white/80 font-medium transition">{s.name}</a></li>
+                  ))}
                 </ul>
               </div>
             </div>
