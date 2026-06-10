@@ -29,7 +29,7 @@ export default function AdminLayout({ children }) {
   return (
     <div className="min-h-screen bg-neutral-100 flex">
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-40 w-64 flex flex-col bg-neutral-900 transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:flex`}>
+      <aside className={`fixed inset-y-0 left-0 z-40 w-64 flex flex-col bg-neutral-900 transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:sticky lg:top-0 lg:h-screen lg:flex`}>
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
           <Link to="/" className="text-xl font-light tracking-tight text-white">DAMIEN</Link>
           <button onClick={() => setSidebarOpen(false)} className="lg:hidden text-white/60 hover:text-white">
