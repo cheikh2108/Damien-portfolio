@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import AdminLayout from '../../components/AdminLayout.jsx'
 import { supabase } from '../../lib/supabase.js'
 
@@ -13,6 +13,7 @@ const EMPTY_FORM = {
   description: '',
   content: '',
   cover_url: '',
+  cover_storage_path: '',
   tools: '',
   featured: false,
 }
@@ -32,6 +33,9 @@ export default function AdminProjects() {
   const [editId, setEditId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
+  const [coverUploading, setCoverUploading] = useState(false)
+  const [coverError, setCoverError] = useState('')
+  const coverRef = useRef(null)
   const isConfigured = import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_URL !== 'your_supabase_project_url'
 
   useEffect(() => { fetchProjects() }, [])
@@ -68,6 +72,25 @@ export default function AdminProjects() {
     setShowForm(true)
   }
 
+  async function handleCoverUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setCoverUploading(true)
+    setCoverError('')
+    const ext = file.name.split('.').pop()
+    const path = `projects/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { error: storageErr } = await supabase.storage.from('portfolio').upload(path, file, { cacheControl: '3600', upsert: false })
+    if (storageErr) {
+      setCoverError(storageErr.message)
+      setCoverUploading(false)
+      return
+    }
+    const { data: { publicUrl } } = supabase.storage.from('portfolio').getPublicUrl(path)
+    setForm(f => ({ ...f, cover_url: publicUrl, cover_storage_path: path }))
+    setCoverUploading(false)
+    if (coverRef.current) coverRef.current.value = ''
+  }
+
   async function handleSave(e) {
     e.preventDefault()
     setSaving(true)
@@ -77,6 +100,7 @@ export default function AdminProjects() {
     }
     delete payload.id
     delete payload.created_at
+    delete payload.cover_storage_path
 
     if (editId) {
       await supabase.from('projects').update(payload).eq('id', editId)
@@ -153,8 +177,43 @@ export default function AdminProjects() {
                     <input name="client" value={form.client} onChange={handleFormChange} className="w-full rounded-xl border border-neutral-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 transition" />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide mb-1">URL de couverture</label>
-                    <input name="cover_url" value={form.cover_url} onChange={handleFormChange} placeholder="https://..." className="w-full rounded-xl border border-neutral-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 transition" />
+                    <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide mb-1">Image de couverture</label>
+                    <div className="space-y-2">
+                      {form.cover_url && (
+                        <div className="relative w-full h-40 rounded-xl overflow-hidden ring-1 ring-neutral-200">
+                          <img src={form.cover_url} alt="" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setForm(f => ({ ...f, cover_url: '', cover_storage_path: '' }))}
+                            className="absolute top-2 right-2 h-7 w-7 flex items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition"
+                          >
+                            <iconify-icon icon="solar:close-circle-linear" width="14" height="14"></iconify-icon>
+                          </button>
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => coverRef.current?.click()}
+                          disabled={coverUploading}
+                          className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 px-4 py-2.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition disabled:opacity-50 shrink-0"
+                        >
+                          {coverUploading
+                            ? <div className="h-4 w-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin"></div>
+                            : <iconify-icon icon="solar:upload-linear" width="16" height="16"></iconify-icon>}
+                          {coverUploading ? 'Upload...' : 'Uploader'}
+                        </button>
+                        <input
+                          name="cover_url"
+                          value={form.cover_url}
+                          onChange={handleFormChange}
+                          placeholder="ou coller une URL..."
+                          className="flex-1 rounded-xl border border-neutral-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 transition"
+                        />
+                      </div>
+                      <input ref={coverRef} type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} />
+                      {coverError && <p className="text-xs text-red-600">{coverError}</p>}
+                    </div>
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide mb-1">Description courte</label>
