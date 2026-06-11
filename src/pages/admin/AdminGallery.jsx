@@ -10,6 +10,7 @@ export default function AdminGallery() {
   const [editItem, setEditItem] = useState(null)
   const [editTitle, setEditTitle] = useState('')
   const [editTags, setEditTags] = useState('')
+  const [editDescription, setEditDescription] = useState('')
   const [uploadError, setUploadError] = useState('')
   const [uploadSuccess, setUploadSuccess] = useState(0)
   const fileRef = useRef(null)
@@ -83,6 +84,7 @@ export default function AdminGallery() {
     setEditItem(item)
     setEditTitle(item.title || '')
     setEditTags(Array.isArray(item.tags) ? item.tags.join(', ') : (item.tags || ''))
+    setEditDescription(item.description || '')
   }
 
   async function handleEditSave(e) {
@@ -90,6 +92,7 @@ export default function AdminGallery() {
     await supabase.from('gallery_items').update({
       title: editTitle,
       tags: editTags ? editTags.split(',').map(t => t.trim()).filter(Boolean) : [],
+      description: editDescription,
     }).eq('id', editItem.id)
     setEditItem(null)
     fetchItems()
@@ -170,6 +173,10 @@ export default function AdminGallery() {
                 <div>
                   <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide mb-1">Tags (séparés par des virgules)</label>
                   <input value={editTags} onChange={e => setEditTags(e.target.value)} placeholder="branding, social, print" className="w-full rounded-xl border border-neutral-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 transition" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-neutral-500 uppercase tracking-wide mb-1">Description / référence projet</label>
+                  <textarea value={editDescription} onChange={e => setEditDescription(e.target.value)} rows={3} placeholder="Ex: Visuels réalisés pour la campagne Instagram de Brand X — Avril 2025" className="w-full rounded-xl border border-neutral-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-neutral-900 transition resize-none" />
                 </div>
                 <div className="flex gap-3 pt-1">
                   <button type="button" onClick={() => setEditItem(null)} className="flex-1 rounded-xl border border-neutral-200 px-4 py-2.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition">Annuler</button>
