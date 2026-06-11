@@ -10,6 +10,8 @@ export default function AdminGallery() {
   const [editItem, setEditItem] = useState(null)
   const [editTitle, setEditTitle] = useState('')
   const [editTags, setEditTags] = useState('')
+  const [uploadError, setUploadError] = useState('')
+  const [uploadSuccess, setUploadSuccess] = useState(0)
   const fileRef = useRef(null)
   const isConfigured = import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_URL !== 'your_supabase_project_url'
 
@@ -27,28 +29,43 @@ export default function AdminGallery() {
     const files = Array.from(e.target.files)
     if (!files.length) return
     setUploading(true)
+    setUploadError('')
+    setUploadSuccess(0)
+    let successCount = 0
+    const errors = []
 
     for (const file of files) {
       const ext = file.name.split('.').pop()
       const path = `gallery/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
-      const { data: storageData, error: uploadError } = await supabase.storage
+      const { error: storageErr } = await supabase.storage
         .from('portfolio')
         .upload(path, file, { cacheControl: '3600', upsert: false })
 
-      if (uploadError) { console.error(uploadError); continue }
+      if (storageErr) {
+        errors.push(`${file.name}: ${storageErr.message}`)
+        continue
+      }
 
       const { data: { publicUrl } } = supabase.storage.from('portfolio').getPublicUrl(path)
 
-      await supabase.from('gallery_items').insert({
+      const { error: dbErr } = await supabase.from('gallery_items').insert({
         title: file.name.replace(/\.[^.]+$/, ''),
         image_url: publicUrl,
         storage_path: path,
         tags: [],
       })
+
+      if (dbErr) {
+        errors.push(`${file.name} (BDD): ${dbErr.message}`)
+      } else {
+        successCount++
+      }
     }
 
     setUploading(false)
+    if (errors.length) setUploadError(errors.join(' | '))
+    if (successCount) setUploadSuccess(successCount)
     fetchItems()
     if (fileRef.current) fileRef.current.value = ''
   }
@@ -107,6 +124,28 @@ export default function AdminGallery() {
           <div className="bg-amber-50 rounded-3xl p-5 ring-1 ring-amber-200 text-sm text-amber-700">
             Configurez Supabase dans <code className="bg-amber-100 px-1 rounded">.env.local</code> pour gérer la galerie.
             <br />Vous devrez aussi créer un bucket <strong>portfolio</strong> dans Supabase Storage.
+          </div>
+        )}
+
+        {uploadError && (
+          <div className="bg-red-50 rounded-2xl px-4 py-3 ring-1 ring-red-200 text-sm text-red-700 flex items-start gap-2">
+            <iconify-icon icon="solar:danger-triangle-linear" width="16" height="16" class="shrink-0 mt-0.5"></iconify-icon>
+            <div>
+              <strong>Erreur upload :</strong> {uploadError}
+            </div>
+            <button onClick={() => setUploadError('')} className="ml-auto shrink-0 text-red-400 hover:text-red-600">
+              <iconify-icon icon="solar:close-circle-linear" width="16" height="16"></iconify-icon>
+            </button>
+          </div>
+        )}
+
+        {uploadSuccess > 0 && (
+          <div className="bg-green-50 rounded-2xl px-4 py-3 ring-1 ring-green-200 text-sm text-green-700 flex items-center gap-2">
+            <iconify-icon icon="solar:check-circle-linear" width="16" height="16"></iconify-icon>
+            {uploadSuccess} image{uploadSuccess > 1 ? 's' : ''} uploadée{uploadSuccess > 1 ? 's' : ''} avec succès.
+            <button onClick={() => setUploadSuccess(0)} className="ml-auto text-green-400 hover:text-green-600">
+              <iconify-icon icon="solar:close-circle-linear" width="16" height="16"></iconify-icon>
+            </button>
           </div>
         )}
 

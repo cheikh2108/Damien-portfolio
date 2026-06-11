@@ -10,6 +10,8 @@ export default function AdminCarousel() {
   const [altInput, setAltInput] = useState('')
   const [showUrlForm, setShowUrlForm] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
+  const [uploadError, setUploadError] = useState('')
+  const [uploadSuccess, setUploadSuccess] = useState(0)
   const fileRef = useRef(null)
 
   useEffect(() => { fetchImages() }, [])
@@ -25,24 +27,35 @@ export default function AdminCarousel() {
     const files = Array.from(e.target.files)
     if (!files.length) return
     setUploading(true)
+    setUploadError('')
+    setUploadSuccess(0)
     const maxOrder = images.reduce((m, img) => Math.max(m, img.sort_order), -1)
+    let successCount = 0
+    const errors = []
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
       const ext = file.name.split('.').pop()
       const path = `carousel/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error: uploadError } = await supabase.storage.from('portfolio').upload(path, file, { cacheControl: '3600' })
-      if (uploadError) { console.error(uploadError); continue }
+      const { error: storageErr } = await supabase.storage.from('portfolio').upload(path, file, { cacheControl: '3600' })
+      if (storageErr) { errors.push(`${file.name}: ${storageErr.message}`); continue }
       const { data: { publicUrl } } = supabase.storage.from('portfolio').getPublicUrl(path)
-      await supabase.from('carousel_images').insert({
+      const { error: dbErr } = await supabase.from('carousel_images').insert({
         src: publicUrl,
         alt: file.name.replace(/\.[^.]+$/, ''),
         sort_order: maxOrder + i + 1,
         storage_path: path,
       })
+      if (dbErr) {
+        errors.push(`${file.name} (BDD): ${dbErr.message}`)
+      } else {
+        successCount++
+      }
     }
 
     setUploading(false)
+    if (errors.length) setUploadError(errors.join(' | '))
+    if (successCount) setUploadSuccess(successCount)
     fetchImages()
     if (fileRef.current) fileRef.current.value = ''
   }
@@ -153,6 +166,26 @@ export default function AdminCarousel() {
               Ajouter
             </button>
           </form>
+        )}
+
+        {uploadError && (
+          <div className="bg-red-50 rounded-2xl px-4 py-3 ring-1 ring-red-200 text-sm text-red-700 flex items-start gap-2">
+            <iconify-icon icon="solar:danger-triangle-linear" width="16" height="16" class="shrink-0 mt-0.5"></iconify-icon>
+            <div><strong>Erreur upload :</strong> {uploadError}</div>
+            <button onClick={() => setUploadError('')} className="ml-auto shrink-0 text-red-400 hover:text-red-600">
+              <iconify-icon icon="solar:close-circle-linear" width="16" height="16"></iconify-icon>
+            </button>
+          </div>
+        )}
+
+        {uploadSuccess > 0 && (
+          <div className="bg-green-50 rounded-2xl px-4 py-3 ring-1 ring-green-200 text-sm text-green-700 flex items-center gap-2">
+            <iconify-icon icon="solar:check-circle-linear" width="16" height="16"></iconify-icon>
+            {uploadSuccess} image{uploadSuccess > 1 ? 's' : ''} uploadée{uploadSuccess > 1 ? 's' : ''} avec succès.
+            <button onClick={() => setUploadSuccess(0)} className="ml-auto text-green-400 hover:text-green-600">
+              <iconify-icon icon="solar:close-circle-linear" width="16" height="16"></iconify-icon>
+            </button>
+          </div>
         )}
 
         {/* Info */}
