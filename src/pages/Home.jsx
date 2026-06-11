@@ -389,6 +389,58 @@ export default function Home() {
           </div>
         </ScrollSection>
 
+        {/* ── Galerie ── */}
+        {galleryItems.length > 0 && (
+          <ScrollSection id="gallery" className="bg-white rounded-3xl mt-8 p-6">
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">/Galerie</p>
+                <h2 className="text-4xl md:text-6xl text-neutral-900 font-light tracking-tight mt-1">Créations récentes.</h2>
+              </div>
+              <span className="text-xs font-medium text-neutral-500 hidden sm:block">({String(galleryItems.length).padStart(2, '0')})</span>
+            </div>
+
+            <motion.div
+              className="grid grid-cols-2 md:grid-cols-4 gap-3 auto-rows-[200px]"
+              initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.05 }}
+              variants={stagger(0.07)}
+            >
+              {galleryItems.map((item, i) => {
+                const wide = i % 3 === 0
+                return (
+                  <motion.div
+                    key={item.id}
+                    variants={fadeUp}
+                    className={`group relative overflow-hidden rounded-2xl bg-neutral-100 ${wide ? 'md:col-span-2 md:row-span-2' : 'col-span-1'}`}
+                  >
+                    <img
+                      src={item.image_url}
+                      alt={item.title || ''}
+                      className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
+                      loading="lazy"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition duration-300 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100">
+                      {item.title && (
+                        <p className="text-white text-sm font-semibold leading-tight">{item.title}</p>
+                      )}
+                      {item.description && (
+                        <p className="text-white/80 text-xs mt-1 leading-relaxed line-clamp-2">{item.description}</p>
+                      )}
+                      {Array.isArray(item.tags) && item.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {item.tags.slice(0, 2).map(tag => (
+                            <span key={tag} className="rounded-full bg-white/20 backdrop-blur px-2 py-0.5 text-[10px] font-medium text-white">{tag}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </motion.div>
+          </ScrollSection>
+        )}
+
         {/* ── Services ── */}
         <ScrollSection className="relative overflow-hidden bg-neutral-900 rounded-3xl mt-8">
           <div className="relative max-w-7xl sm:px-6 mr-auto ml-auto p-6">
@@ -438,59 +490,6 @@ export default function Home() {
             </motion.div>
           </div>
         </ScrollSection>
-
-        {/* ── Galerie ── */}
-        {galleryItems.length > 0 && (
-          <ScrollSection id="gallery" className="bg-white rounded-3xl mt-8 p-6">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <p className="text-xs font-medium text-neutral-500 uppercase tracking-wide">/Galerie</p>
-                <h2 className="text-4xl md:text-6xl text-neutral-900 font-light tracking-tight mt-1">Créations récentes.</h2>
-              </div>
-              <span className="text-xs font-medium text-neutral-500 hidden sm:block">({String(galleryItems.length).padStart(2, '0')})</span>
-            </div>
-
-            <motion.div
-              className="grid grid-cols-2 md:grid-cols-4 gap-3 auto-rows-[200px]"
-              initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.05 }}
-              variants={stagger(0.07)}
-            >
-              {galleryItems.map((item, i) => {
-                // Tuiles larges : 1ère, 4ème, 7ème
-                const wide = i % 3 === 0
-                return (
-                  <motion.div
-                    key={item.id}
-                    variants={fadeUp}
-                    className={`group relative overflow-hidden rounded-2xl bg-neutral-100 ${wide ? 'md:col-span-2 md:row-span-2' : 'col-span-1'}`}
-                  >
-                    <img
-                      src={item.image_url}
-                      alt={item.title || ''}
-                      className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/60 transition duration-300 flex flex-col justify-end p-4 opacity-0 group-hover:opacity-100">
-                      {item.title && (
-                        <p className="text-white text-sm font-semibold leading-tight">{item.title}</p>
-                      )}
-                      {item.description && (
-                        <p className="text-white/80 text-xs mt-1 leading-relaxed line-clamp-2">{item.description}</p>
-                      )}
-                      {Array.isArray(item.tags) && item.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {item.tags.slice(0, 2).map(tag => (
-                            <span key={tag} className="rounded-full bg-white/20 backdrop-blur px-2 py-0.5 text-[10px] font-medium text-white">{tag}</span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </motion.div>
-                )
-              })}
-            </motion.div>
-          </ScrollSection>
-        )}
 
         {/* ── Footer ── */}
         <motion.footer
