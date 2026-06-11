@@ -508,7 +508,7 @@ export default function Home() {
                 </div>
               </div>
               <div>
-                <h4 className="text-3xl font-light tracking-tight">Restons connectés</h4>
+                <h4 className="text-3xl font-light tracking-tight">Let's connect</h4>
                 <p className="mt-2 text-sm text-white/70">Abonnez-vous pour suivre mes dernières créations et projets.</p>
                 <form className="mt-5" onSubmit={e => {
                   e.preventDefault()
