@@ -453,9 +453,15 @@ export default function Home() {
               <div>
                 <h4 className="text-3xl font-light tracking-tight">Restons connectés</h4>
                 <p className="mt-2 text-sm text-white/70">Abonnez-vous pour suivre mes dernières créations et projets.</p>
-                <form className="mt-5" onSubmit={e => e.preventDefault()}>
+                <form className="mt-5" onSubmit={e => {
+                  e.preventDefault()
+                  const email = e.target.elements.email.value.trim()
+                  if (!email) return
+                  const to = profile.email || ''
+                  window.location.href = `mailto:${to}?subject=Contact depuis le portfolio&body=Bonjour, je souhaite vous contacter. Mon adresse email est : ${email}`
+                }}>
                   <div className="flex items-center gap-3 border-b border-white/20 pb-2">
-                    <input type="email" placeholder="E-mail" className="flex-1 bg-transparent placeholder-white/60 text-white text-sm focus:outline-none" />
+                    <input name="email" type="email" placeholder="E-mail" required className="flex-1 bg-transparent placeholder-white/60 text-white text-sm focus:outline-none" />
                     <button type="submit" className="inline-flex items-center justify-center h-9 w-9 rounded-full bg-white text-neutral-900 hover:bg-neutral-100 transition">
                       <iconify-icon icon="solar:arrow-right-linear" width="16" height="16"></iconify-icon>
                     </button>
